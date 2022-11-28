@@ -138,14 +138,8 @@ export default (props: Props) => {
             defaultOpacityConfig(index, itemWidth));
 
           return (
-            <TouchableWithoutFeedback onPress={() => {
-              if (flatListRef && flatListRef.current) {
-                fixed = true;
-                // @ts-ignore
-                flatListRef.current.scrollToIndex({animated: true, index: "" + index});
-              }
-              if (onChange) { onChange(index); }
-            }} key={index}>
+            <TouchableWithoutFeedback 
+              key={index}>
               <Animated.View style={{transform: [{scale}], opacity}}>
                 {renderItem(item, index)}
               </Animated.View>
