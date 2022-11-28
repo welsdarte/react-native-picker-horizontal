@@ -96,7 +96,7 @@ export default (props: Props) => {
       if (!fixed && flatListRef && flatListRef.current) {
         fixed = true;
         // @ts-ignore
-        flatListRef.current.scrollToIndex({animated: true, index: "" + fixedPosition});
+        flatListRef.current.scrollToIndex({animated: false, index: "" + fixedPosition});
       }
     }, Platform.OS == "ios" ? 50 : 0);
   }
@@ -138,12 +138,11 @@ export default (props: Props) => {
             defaultOpacityConfig(index, itemWidth));
 
           return (
-            <TouchableWithoutFeedback 
-              key={index}>
+            <View  key={index}>
               <Animated.View style={{transform: [{scale}], opacity}}>
                 {renderItem(item, index)}
               </Animated.View>
-            </TouchableWithoutFeedback>
+            </View>
           )
         }} />
     </View>
