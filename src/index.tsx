@@ -53,7 +53,6 @@ export default (props: Props) => {
     const {itemWidth, onLayout, initialIndex} = props;
     setPaddingSide((width - itemWidth) / 2);
 
-    console.log("E:",e.nativeEvent);
     if (onLayout != null) {
       
       onLayout(e);
@@ -200,7 +199,7 @@ const defaultScaleConfig = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: [1, 1.7, 1.8, 1.7, 1]
+  outputRange: [0.8, 0.92, 1, 0.92, 0.8]
 });
 
 const defaultOpacityConfig = (index: number, itemWidth: number) => ({
