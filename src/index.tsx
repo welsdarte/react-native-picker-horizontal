@@ -200,7 +200,7 @@ const defaultScaleConfig = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: [2, 1.7, 1.8, 1.7, 2]
+  outputRange: [1, 1.7, 1.8, 1.7, 1]
 });
 
 const defaultOpacityConfig = (index: number, itemWidth: number) => ({
@@ -211,7 +211,7 @@ const defaultOpacityConfig = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: [-0.2, 0.9, 1, 0.9, -0.2]
+  outputRange: [-0.4, 0.9, 1, 0.9, -0.4]
 });
 
 
@@ -223,7 +223,7 @@ const defaultRotationConfig = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: ['90deg', '20deg', '0deg', '-20deg', '-90deg'],
+  outputRange: ['30deg', '10deg', '0deg', '-10deg', '-30deg'],
   
 });
 const defaultRotationConfig2 = (index: number, itemWidth: number) => ({
@@ -234,7 +234,7 @@ const defaultRotationConfig2 = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: ['9deg', '2deg', '0deg', '-2deg', '-9deg'],
+  outputRange: ['20deg', '1deg', '0deg', '-1deg', '-20deg'],
   
 });
 
@@ -246,5 +246,5 @@ const defaultTranslateConfig = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: [3, 1, 0, 1, 3]
+  outputRange: [18, 3, 0, 3, 18]
 });
