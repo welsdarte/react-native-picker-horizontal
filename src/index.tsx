@@ -66,8 +66,11 @@ export default (props: Props) => {
   }
 
   const onMomentumScrollEnd = ({nativeEvent: {contentOffset: {x}}}: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const selected = Math.round(x / itemWidth);
-    changePosition(selected);
+    setTimeout(()=> {
+      const selected = Math.round(x / itemWidth);
+      changePosition(selected);
+
+    }, 0)
   }
 
   const onScrollBeginDrag = () => {
@@ -75,7 +78,17 @@ export default (props: Props) => {
     clearTimeout(timeoutFixPosition);
   }
 
-  const onScrollEndDrag = () => {
+  const onScrollEndDrag = ({nativeEvent: {contentOffset: {x}}}: NativeSyntheticEvent<NativeScrollEvent>) => {
+   /*  var selected 
+    const bias = 1
+    if( x > 0){
+
+      selected = Math.round((x + bias) / itemWidth) ;
+    }else{
+
+      selected = Math.round((x - bias) / itemWidth) ;
+    }
+    changePosition(selected); */
     clearTimeout(timeoutFixPosition);
   }
 
@@ -109,6 +122,7 @@ export default (props: Props) => {
         {typeof props.mark === "undefined" ? DefaultMark : props.mark}
       </View>
       <Animated.FlatList
+        decelerationRate={'fast'}
         ref={process.env.NODE_ENV === 'test' ? null : flatListRef}
         onLayout={onLayoutScrollView}
         onScroll={Animated.event([{nativeEvent: {contentOffset: {x: scrollX}}}],
