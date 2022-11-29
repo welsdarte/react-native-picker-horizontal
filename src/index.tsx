@@ -1,4 +1,7 @@
 import React, {ReactNode, useState} from 'react';
+import * as Haptics from 'expo-haptics';
+
+
 import {
   View,
   Text,
@@ -11,6 +14,7 @@ import {
   Platform
 } from 'react-native';
 
+var lastOffset = -99;
 
 export interface Props extends ScrollViewProps {
   data: any[],
@@ -49,13 +53,15 @@ export default (props: Props) => {
     const {itemWidth, onLayout, initialIndex} = props;
     setPaddingSide((width - itemWidth) / 2);
 
+    console.log("E:",e.nativeEvent);
     if (onLayout != null) {
+      
       onLayout(e);
     }
     if (initialIndex) {
       if (flatListRef && flatListRef.current) {
         // @ts-ignore
-        flatListRef.current.scrollToIndex({animated: false, index: "" + initialIndex});
+        flatListRef.current.scrollToIndex({animated: true, index: "" + initialIndex});
       }
     }
   }
@@ -73,26 +79,31 @@ export default (props: Props) => {
     }, 0)
   }
 
-  const onScrollBeginDrag = () => {
+  const onScrollBeginDrag = ({nativeEvent: {contentOffset: {x}}}: NativeSyntheticEvent<NativeScrollEvent>) => {
+    lastOffset = x;
+    /*  console.log("🚀🚀🚀TURBO LOG🚀🚀🚀: 👉 file: index.tsx 👉 line 82 👉 onScrollBeginDrag 👉 lastOffset", lastOffset) */
     fixed = false;
     clearTimeout(timeoutFixPosition);
   }
 
   const onScrollEndDrag = ({nativeEvent: {contentOffset: {x}}}: NativeSyntheticEvent<NativeScrollEvent>) => {
-   /*  var selected 
-    const bias = 1
-    if( x > 0){
+    /* console.log("🚀🚀🚀TURBO LOG🚀🚀🚀: 👉 file: index.tsx 👉 line 85 👉 onScrollEndDrag 👉 x", x) */
+    var selected 
+    
+    const bias = Math.abs(x - lastOffset) < 30 ? 30 : 0
+
+    if( x > lastOffset){
 
       selected = Math.round((x + bias) / itemWidth) ;
     }else{
 
       selected = Math.round((x - bias) / itemWidth) ;
     }
-    changePosition(selected); */
-    clearTimeout(timeoutFixPosition);
+    changePosition(selected);
   }
 
-  const changePosition = (position: number) => {
+  const changePosition = (position: number) => { 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     let fixedPosition = position;
     if (position < 0) {
       fixedPosition = 0;
@@ -109,10 +120,11 @@ export default (props: Props) => {
       if (!fixed && flatListRef && flatListRef.current) {
         fixed = true;
         // @ts-ignore
-        flatListRef.current.scrollToIndex({animated: false, index: "" + fixedPosition});
+        flatListRef.current.scrollToIndex({animated: true,  index: "" + fixedPosition});
       }
-    }, Platform.OS == "ios" ? 50 : 0);
+    }, Platform.OS == "ios" ? 0 : 0);
   }
+  
 
   return (
     <View style={{display: "flex", height: "100%", ...style}} {...passedProps}>
@@ -122,7 +134,8 @@ export default (props: Props) => {
         {typeof props.mark === "undefined" ? DefaultMark : props.mark}
       </View>
       <Animated.FlatList
-        decelerationRate={'fast'}
+        snapToInterval={4}
+        disableIntervalMomentum={true}
         ref={process.env.NODE_ENV === 'test' ? null : flatListRef}
         onLayout={onLayoutScrollView}
         onScroll={Animated.event([{nativeEvent: {contentOffset: {x: scrollX}}}],
@@ -131,8 +144,8 @@ export default (props: Props) => {
         showsHorizontalScrollIndicator={false}
         data={data}
         keyExtractor={(_item, index) => index.toString()}
-        onMomentumScrollBegin={onMomentumScrollBegin}
-        onMomentumScrollEnd={onMomentumScrollEnd}
+        /* onMomentumScrollBegin={onMomentumScrollBegin}
+        onMomentumScrollEnd={onMomentumScrollEnd} */
         onScrollBeginDrag={onScrollBeginDrag}
         onScrollEndDrag={onScrollEndDrag}
         contentContainerStyle={{
@@ -151,9 +164,17 @@ export default (props: Props) => {
             interpolateOpacity(index, itemWidth) :
             defaultOpacityConfig(index, itemWidth));
 
+          const rotation = scrollX.interpolate(
+            defaultRotationConfig(index, itemWidth));
+          const rotation2 = scrollX.interpolate(
+            defaultRotationConfig2(index, itemWidth));
+
+          const translateY = scrollX.interpolate(
+            defaultTranslateConfig(index, itemWidth)
+          )
           return (
             <View  key={index}>
-              <Animated.View style={{transform: [{scale}], opacity}}>
+              <Animated.View style={{transform: [{scale}, {rotateZ:rotation2 },{rotateY:rotation }, { translateY}], opacity}}>
                 {renderItem(item, index)}
               </Animated.View>
             </View>
@@ -162,6 +183,7 @@ export default (props: Props) => {
     </View>
   );
 }
+  
 
 const DefaultMark =
   <Text style={{
@@ -178,7 +200,7 @@ const defaultScaleConfig = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: [1, 1.5, 2.2, 1.5, 1]
+  outputRange: [2, 1.7, 1.8, 1.7, 2]
 });
 
 const defaultOpacityConfig = (index: number, itemWidth: number) => ({
@@ -189,5 +211,40 @@ const defaultOpacityConfig = (index: number, itemWidth: number) => ({
     itemWidth * (index + 1),
     itemWidth * (index + 2),
   ],
-  outputRange: [0.7, 0.9, 1, 0.9, 0.7]
+  outputRange: [-0.2, 0.9, 1, 0.9, -0.2]
+});
+
+
+const defaultRotationConfig = (index: number, itemWidth: number) => ({
+  inputRange: [
+    itemWidth * (index - 2),
+    itemWidth * (index - 1),
+    itemWidth * index,
+    itemWidth * (index + 1),
+    itemWidth * (index + 2),
+  ],
+  outputRange: ['90deg', '20deg', '0deg', '-20deg', '-90deg'],
+  
+});
+const defaultRotationConfig2 = (index: number, itemWidth: number) => ({
+  inputRange: [
+    itemWidth * (index - 2),
+    itemWidth * (index - 1),
+    itemWidth * index,
+    itemWidth * (index + 1),
+    itemWidth * (index + 2),
+  ],
+  outputRange: ['9deg', '2deg', '0deg', '-2deg', '-9deg'],
+  
+});
+
+const defaultTranslateConfig = (index: number, itemWidth: number) => ({
+  inputRange: [
+    itemWidth * (index - 2),
+    itemWidth * (index - 1),
+    itemWidth * index,
+    itemWidth * (index + 1),
+    itemWidth * (index + 2),
+  ],
+  outputRange: [3, 1, 0, 1, 3]
 });
