@@ -30,6 +30,10 @@ export interface Props extends ScrollViewProps {
 }
 
 
+var prevIndex = -1
+var lastVibrated = -1
+
+
 export default (props: Props) => {
   const {
     data,
@@ -41,7 +45,10 @@ export default (props: Props) => {
     ...passedProps
   } = props;
 
+
+  
   const scrollX = React.useRef(new Animated.Value(0)).current;
+
   let fixed = React.useRef(false).current;
   let timeoutFixPosition = React.useRef(setTimeout(() => {
   }, 0)).current;
@@ -52,7 +59,7 @@ export default (props: Props) => {
     const {width} = e.nativeEvent.layout;
     const {itemWidth, onLayout, initialIndex} = props;
     setPaddingSide((width - itemWidth) / 2);
-
+    //console.log("e",e)
     if (onLayout != null) {
       
       onLayout(e);
@@ -60,7 +67,7 @@ export default (props: Props) => {
     if (initialIndex) {
       if (flatListRef && flatListRef.current) {
         // @ts-ignore
-        flatListRef.current.scrollToIndex({animated: true, index: "" + initialIndex});
+        flatListRef.current.scrollToIndex({animated: false, index: "" + initialIndex});
       }
     }
   }
@@ -70,26 +77,35 @@ export default (props: Props) => {
     clearTimeout(timeoutFixPosition);
   }
 
+  
+
   const onMomentumScrollEnd = ({nativeEvent: {contentOffset: {x}}}: NativeSyntheticEvent<NativeScrollEvent>) => {
+    
     setTimeout(()=> {
       const selected = Math.round(x / itemWidth);
-      changePosition(selected);
+      
+      changePosition(selected)
+  
+      
 
     }, 0)
   }
 
   const onScrollBeginDrag = ({nativeEvent: {contentOffset: {x}}}: NativeSyntheticEvent<NativeScrollEvent>) => {
+    
     lastOffset = x;
     /*  console.log("🚀🚀🚀TURBO LOG🚀🚀🚀: 👉 file: index.tsx 👉 line 82 👉 onScrollBeginDrag 👉 lastOffset", lastOffset) */
     fixed = false;
+    
     clearTimeout(timeoutFixPosition);
   }
 
   const onScrollEndDrag = ({nativeEvent: {contentOffset: {x}}}: NativeSyntheticEvent<NativeScrollEvent>) => {
-    /* console.log("🚀🚀🚀TURBO LOG🚀🚀🚀: 👉 file: index.tsx 👉 line 85 👉 onScrollEndDrag 👉 x", x) */
+    
+    
     var selected 
     
-    const bias = Math.abs(x - lastOffset) < 30 ? 30 : 0
+    const bias = Math.abs(x - lastOffset) < 20 ? 20 : 0
 
     if( x > lastOffset){
 
@@ -98,11 +114,17 @@ export default (props: Props) => {
 
       selected = Math.round((x - bias) / itemWidth) ;
     }
-    changePosition(selected);
+    
+    
+    changePosition(selected)
+
+    
+    /* clearTimeout(timeoutFixPosition); */
+    
   }
 
   const changePosition = (position: number) => { 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    
     let fixedPosition = position;
     if (position < 0) {
       fixedPosition = 0;
@@ -111,20 +133,45 @@ export default (props: Props) => {
       fixedPosition = data.length - 1;
     }
 
-    if (onChange) {
-      onChange(fixedPosition);
-    }
+
+   
+    
     clearTimeout(timeoutFixPosition);
+    
+
     timeoutFixPosition = setTimeout(function () {
       if (!fixed && flatListRef && flatListRef.current) {
+        if (onChange) {
+          onChange(fixedPosition);
+          prevIndex = fixedPosition
+        }
         fixed = true;
+        if( prevIndex  !== fixedPosition){
+          //Haptics.impactAsync(Haptics.NotificationFeedbackType.Success)
+          
+        }
         // @ts-ignore
-        flatListRef.current.scrollToIndex({animated: true,  index: "" + fixedPosition});
+        flatListRef.current.scrollToIndex({animated: false,  index: "" + fixedPosition});
       }
     }, Platform.OS == "ios" ? 0 : 0);
   }
-  
 
+  function  handleOnScrollFeedbacks( offset : number){
+    let index = Math.round( offset / itemWidth) 
+   
+
+    if(true||index !== prevIndex){
+      if(index !== lastVibrated){
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+        lastVibrated = index
+        
+      }
+    }
+
+    
+
+  }
+   
   return (
     <View style={{display: "flex", height: "100%", ...style}} {...passedProps}>
       <View style={{
@@ -133,18 +180,20 @@ export default (props: Props) => {
         {typeof props.mark === "undefined" ? DefaultMark : props.mark}
       </View>
       <Animated.FlatList
-        snapToInterval={4}
-        disableIntervalMomentum={true}
+        /* snapToInterval={4} *//* 
+        disableIntervalMomentum={true} */
         ref={process.env.NODE_ENV === 'test' ? null : flatListRef}
         onLayout={onLayoutScrollView}
-        onScroll={Animated.event([{nativeEvent: {contentOffset: {x: scrollX}}}],
-          {useNativeDriver: true})}
+        onScroll={Animated.event([{nativeEvent: {contentOffset: {x: scrollX}}}], 
+          {useNativeDriver: true,
+            listener: (event) => { handleOnScrollFeedbacks(event.nativeEvent.contentOffset.x);  /*  console.log("event.contentOffset - - - - - - - -",event.nativeEvent.contentOffset.x ) */}},
+          )}
         horizontal={true}
         showsHorizontalScrollIndicator={false}
         data={data}
         keyExtractor={(_item, index) => index.toString()}
-        /* onMomentumScrollBegin={onMomentumScrollBegin}
-        onMomentumScrollEnd={onMomentumScrollEnd} */
+        onMomentumScrollBegin={onMomentumScrollBegin}
+        onMomentumScrollEnd={onMomentumScrollEnd}
         onScrollBeginDrag={onScrollBeginDrag}
         onScrollEndDrag={onScrollEndDrag}
         contentContainerStyle={{
